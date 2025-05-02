@@ -1,41 +1,30 @@
 MSP430 Emulator
 ===============
+# Intro
 
-You can use this emulator online now at: https://msp430.online
+This is a fork of RudolfGeosits's project: https://github.com/RudolfGeosits/MSP430-Emulator
 
-- Providing a complete software model of the MSP430 16-bit instruction set
-- An interactive debugger for advanced development and in depth firmware/hardware analysis
-- Peripherals include:
-  - GPIO Ports (LEDs and other pins)
-  - UART Serial Communication (via USCI Module)
-  - PWM Servo Motor Control
-  - Timer_A (in progress)
-  - BCM+ (in progress)
+# Setup
+## Linux
+```
+cd path/to/this/repo
+./install_deps.sh
+make PREFIX='/usr/local' 
+```
 
-  The project goal is to emulate all peripherals and devices on the TI MSP430 Launchpad starter kit, 
-  to be able to run all firmware that would run on the physical device and programmatically test hardware inputs like    UART / other digital ports. The emulator is written in C/C++ and acts as an API to the MCU.
-  
-  Please contact rgeosits@live.esu.edu if you are interested in using this tool for educational or industrial purposes.
-  Thank you!
-  
-![Interface.PNG](https://msp430.online/images/Interface.PNG)
-  
---------------------------------------------------------------------------------------------------------------------------
+TODO [Check Linux install](https://github.com/BunnySpectrum/MSP430-Emulator/issues/3)
 
-- Build Instructions for API
-  - Install dependencies via ./install_deps.sh
-  - navigate to the root of the source tree
-  - type 'make'
+## Mac
+Steps below assume you are using homebrew to install packages.
 
-- User Instructions for online interface
-  - Log onto https://msp430.online to use the online simulator!
+Download files from [TI](https://www.ti.com/tool/download/MSP430-GCC-OPENSOURCE)
+- "GCC mac toolchain only"
+- "Header and support files"
 
-- Documentation & Sample Programs:
-  - Sample Programs: https://msp430.online/examples.html
-  - User Guide: http://msp430.online/help.html
+```
+brew install libwebsockets
+cd path/to/this/repo
+make PREFIX='/opt/homebrew'
+```
 
-- TODO
-  - Basic Clock Module / Timer  
-  - Instructions
-    - DADD (BCD math)
-    - RETI (Return from Interrupt)
+
