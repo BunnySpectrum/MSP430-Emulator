@@ -7,7 +7,6 @@ PREFIX = /opt/homebrew
 # OS-specific 
 CLEANUP = rm -f
 MKDIR = mkdir -p
-TARGET_EXTENSION=out
 
 # Toolchain
 PATH_INCLUDE = $(PREFIX)/include
@@ -30,7 +29,7 @@ SRC_C =$(addprefix devices/,utilities.c) \
 
 
 .PHONY: MSP430
-MSP430: bin/msp430.$(TARGET_EXTENSION)
+MSP430: bin/MSP430
 
 build/emu/%.o:: %.cpp
 	$(MKDIR) $(dir $@)
@@ -40,15 +39,15 @@ build/emu/%.o:: %.c
 	$(MKDIR) $(dir $@)
 	$(CXX) -c $(CFLAGS) $< -o $@
 
-bin/msp430.$(TARGET_EXTENSION): $(addprefix build/emu/,$(patsubst %.c,%.o,$(SRC_C))) $(addprefix build/emu/,$(patsubst %.cpp,%.o,$(SRC_CPP))) 
+bin/MSP430: $(addprefix build/emu/,$(patsubst %.c,%.o,$(SRC_C))) $(addprefix build/emu/,$(patsubst %.cpp,%.o,$(SRC_CPP))) 
 	$(MKDIR) bin
 	$(CXX) -o $@ $^ -L $(PATH_LIB) $(EMU_LIBS)
 
 
 .PHONY: SERVER
-SERVER : bin/server.$(TARGET_EXTENSION)
+SERVER : bin/server
 
-bin/server.$(TARGET_EXTENSION): build/server/server.o
+bin/server: build/server/server.o
 	$(MKDIR) bin
 	$(CC) -o $@ $^ -L $(PATH_LIB) $(SERVER_LIBS)
 
