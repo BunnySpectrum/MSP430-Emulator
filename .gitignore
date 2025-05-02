@@ -39,3 +39,5 @@ TAGS
 obj/
 *.vcxproj*
 *.i64
+bin/
+build/

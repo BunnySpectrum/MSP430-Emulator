@@ -1,80 +1,60 @@
 all: MSP430 SERVER
 
-MSP430 : main.o utilities.o emu_server.o registers.o memspace.o debugger.o disassembler.o \
-	register_display.o decoder.o flag_handler.o formatI.o formatII.o formatIII.o \
-	usci.o port1.o packet_queue.o bcm.o timer_a.o
+# Point the PREFIX to the parent folder of the include and lib folders
+# Can override on command line via `make PREFIX='/path/to/toolchain'`
+PREFIX = /opt/homebrew
 
-	g++ -o MSP430 main.o emu_server.o utilities.o registers.o memspace.o debugger.o disassembler.o \
-	register_display.o decoder.o flag_handler.o formatI.o formatII.o formatIII.o usci.o port1.o bcm.o timer_a.o packet_queue.o -lreadline -lwebsockets -lpthread -lrt -lssl -lcrypto;
+# OS-specific 
+CLEANUP = rm -f
+MKDIR = mkdir -p
 
-main.o : main.cpp
-	g++ -c main.cpp
+# Toolchain
+PATH_INCLUDE = $(PREFIX)/include
+PATH_LIB = $(PREFIX)/lib
+CC = cc
+CXX = g++
 
-utilities.o : devices/utilities.c
-	g++ -c devices/utilities.c
+# Build flags
+CFLAGS=-I$(PATH_INCLUDE)
+EMU_LIBS = -lreadline -lwebsockets -lpthread -lssl -lcrypto
+SERVER_LIBS = -lwebsockets -lpthread -lssl -lcrypto
 
-registers.o : devices/cpu/registers.c
-	g++ -c devices/cpu/registers.c
+SRC_CPP = main.cpp debugger/websockets/emu_server.cpp
+SRC_C =$(addprefix devices/,utilities.c) \
+	$(addprefix devices/cpu/,registers.c decoder.c flag_handler.c formatI.c formatII.c formatIII.c) \
+	$(addprefix devices/memory/,memspace.c) \
+	$(addprefix devices/peripherals/,usci.c port1.c bcm.c timer_a.c) \
+	$(addprefix debugger/,debugger.c disassembler.c register_display.c) \
+	$(addprefix debugger/websockets/,packet_queue.c) \
 
-memspace.o : devices/memory/memspace.c
-	g++ -c devices/memory/memspace.c
 
-debugger.o : debugger/debugger.c
-	g++ -c debugger/debugger.c
+.PHONY: MSP430
+MSP430: bin/MSP430
 
-disassembler.o : debugger/disassembler.c
-	g++ -c debugger/disassembler.c
+build/emu/%.o:: %.cpp
+	$(MKDIR) $(dir $@)
+	$(CXX) -c $(CFLAGS) $< -o $@
 
-register_display.o : debugger/register_display.c
-	g++ -c debugger/register_display.c
+build/emu/%.o:: %.c
+	$(MKDIR) $(dir $@)
+	$(CXX) -c $(CFLAGS) $< -o $@
 
-decoder.o : devices/cpu/decoder.c
-	g++ -c devices/cpu/decoder.c
+bin/MSP430: $(addprefix build/emu/,$(patsubst %.c,%.o,$(SRC_C))) $(addprefix build/emu/,$(patsubst %.cpp,%.o,$(SRC_CPP))) 
+	$(MKDIR) bin
+	$(CXX) -o $@ $^ -L $(PATH_LIB) $(EMU_LIBS)
 
-flag_handler.o : devices/cpu/flag_handler.c
-	g++ -c devices/cpu/flag_handler.c
 
-formatI.o : devices/cpu/formatI.c
-	g++ -c devices/cpu/formatI.c
+.PHONY: SERVER
+SERVER : bin/server
 
-formatII.o : devices/cpu/formatII.c
-	g++ -c devices/cpu/formatII.c
+bin/server: build/server/server.o
+	$(MKDIR) bin
+	$(CC) -o $@ $^ -L $(PATH_LIB) $(SERVER_LIBS)
 
-formatIII.o : devices/cpu/formatIII.c
-	g++ -c devices/cpu/formatIII.c
-
-bcm.o : devices/peripherals/bcm.c
-	g++ -c devices/peripherals/bcm.c
-
-timer_a.o : devices/peripherals/timer_a.c
-	g++ -c devices/peripherals/timer_a.c
-
-usci.o : devices/peripherals/usci.c
-	g++ -c devices/peripherals/usci.c
-
-port1.o : devices/peripherals/port1.c
-	g++ -c devices/peripherals/port1.c
-
-emu_server.o : debugger/websockets/emu_server.cpp
-	g++ -c debugger/websockets/emu_server.cpp
-
-packet_queue.o : debugger/websockets/packet_queue.c
-	g++ -c debugger/websockets/packet_queue.c
-
-# Server Program
-
-SERVER : server.o
-	cc -o server server.o -lrt -lpthread -lwebsockets -lssl -lcrypto;
-
-server.o : debugger/server/server.c
-	cc -c debugger/server/server.c
-
+build/server/server.o : debugger/server/server.c
+	$(MKDIR) build/server
+	$(CC) -c $(CFLAGS) $< -o $@
 
 clean :
-	rm server.o main.o utilities.o emu_server.o registers.o \
-	memspace.o debugger.o disassembler.o \
-	register_display.o decoder.o flag_handler.o formatI.o \
-	formatII.o formatIII.o \
-	usci.o port1.o packet_queue.o bcm.o timer_a.o \
-	*.bin *.tmp *.elf \
-	MSP430 server;
+	$(CLEANUP) -r build
+	$(CLEANUP) -r bin
